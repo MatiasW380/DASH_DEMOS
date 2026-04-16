@@ -103,6 +103,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--mono); font
 <script>
 const API_BASE = "https://matiasbarone.pythonanywhere.com";
 const REFRESH = 60000;
+const INITIAL_CAPITAL = 1000; // Ambos bots arrancan con $1000
 
 async function fetchBotData(endpoint, botId) {
   try {
@@ -135,12 +136,13 @@ function formatPercent(n, decimals = 2) {
 
 function renderMetrics(containerId, state) {
   const container = document.getElementById(containerId);
-  if (!container) return;
+  if (!container || state.error) {
+    if (container) container.innerHTML = `<div class="metric"><div class="metric-value">ERROR</div><div class="metric-label">NO DATA</div></div>`.repeat(4);
+    return;
+  }
   
   const cap = state.capital || 0;
-  // Fallback: initial_capital no existe en SOL, usar 1000 (capital inicial de ambos bots)
-  const initialCap = state.initial_capital || 1000;
-  const ret = ((cap - initialCap) / initialCap) * 100;
+  const ret = ((cap - INITIAL_CAPITAL) / INITIAL_CAPITAL) * 100;
   const wins = state.total_wins || 0;
   const losses = state.total_losses || 0;
   const tot = wins + losses;
@@ -157,11 +159,14 @@ function renderMetrics(containerId, state) {
 
 function renderPosition(containerId, state, price) {
   const container = document.getElementById(containerId);
-  if (!container) return;
+  if (!container || state.error) {
+    container.innerHTML = `<div class="position-badge flat">ERROR</div><div class="position-details"><div class="position-detail">—</div></div>`;
+    return;
+  }
   
   const position = state.position;
   const entryPrice = state.entry_price || 0;
-  // Detectar si es BTC o SOL por el símbolo o por el precio (BTC > 10000, SOL < 1000)
+  // Detectar si es BTC o SOL por el precio (BTC > 10000, SOL < 1000)
   const isBTC = price > 10000;
   const tpPct = isBTC ? 4.0 : 5.0;
   const slPct = isBTC ? 1.2 : 1.5;
