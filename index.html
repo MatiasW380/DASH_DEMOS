@@ -202,14 +202,12 @@ function formatPercent(n, decimals = 2) {
   return `${val >= 0 ? '+' : ''}${val.toFixed(decimals)}%`;
 }
 
-// Determinar color para RETURN: verde si >0, rojo si <0, blanco si ==0
 function getReturnColor(value) {
   if (value > 0) return 'green';
   if (value < 0) return 'red';
   return 'text';
 }
 
-// Determinar color para WIN RATE: verde si >50, rojo si <=50
 function getWRColor(value) {
   if (value > 50) return 'green';
   return 'red';
@@ -243,7 +241,7 @@ function renderMetrics(containerId, state) {
   `;
 }
 
-function renderPosition(containerId, state, price) {
+function renderPosition(containerId, state, currentPrice) {
   const container = document.getElementById(containerId);
   if (!container) return;
   
@@ -254,28 +252,35 @@ function renderPosition(containerId, state, price) {
   
   const position = state.position;
   const entryPrice = state.entry_price || 0;
-  const isBTC = price > 10000;
+  const isBTC = currentPrice > 10000;
   const tpPct = isBTC ? 4.0 : 5.0;
   const slPct = isBTC ? 1.2 : 1.5;
   const lev = 10;
   
   let tp = 0, sl = 0, pnl = 0;
-  if (position && entryPrice > 0 && price > 0) {
+  if (position && entryPrice > 0 && currentPrice > 0) {
     if (position === 'LONG') {
       tp = entryPrice * (1 + tpPct / lev / 100);
       sl = entryPrice * (1 - slPct / lev / 100);
-      pnl = ((price - entryPrice) / entryPrice) * lev * 100;
+      pnl = ((currentPrice - entryPrice) / entryPrice) * lev * 100;
     } else if (position === 'SHORT') {
       tp = entryPrice * (1 - tpPct / lev / 100);
       sl = entryPrice * (1 + slPct / lev / 100);
-      pnl = ((entryPrice - price) / entryPrice) * lev * 100;
+      pnl = ((entryPrice - currentPrice) / entryPrice) * lev * 100;
     }
   }
   
   const positionClass = position ? position.toLowerCase() : 'flat';
   const positionText = position || 'FLAT';
-  const pnlColor = pnl > 0 ? 'green' : (pnl < 0 ? 'red' : 'text');
-  const pnlText = position ? `${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%` : '—';
+  
+  let pnlColor = 'text';
+  let pnlText = '—';
+  if (position) {
+    if (pnl > 0) pnlColor = 'green';
+    else if (pnl < 0) pnlColor = 'red';
+    else pnlColor = 'text';
+    pnlText = `${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%`;
+  }
   
   container.innerHTML = `
     <div class="position-badge ${positionClass}">${positionText}</div>
@@ -299,25 +304,29 @@ function renderTrades(containerId, trades, botType) {
   const lastTrades = [...trades].reverse().slice(0, 5);
   const isBTC = botType === 'btc';
   
+  let tableRows = '';
+  for (const t of lastTrades) {
+    const pnlValue = t.pnl_pct || 0;
+    let pnlColor = 'text';
+    if (pnlValue > 0) pnlColor = 'green';
+    else if (pnlValue < 0) pnlColor = 'red';
+    
+    tableRows += `
+      <tr>
+        <td><span class="pill pill-${t.side?.toLowerCase()}">${t.side || '—'}</span></td>
+        <td>$${formatNumber(t.entry_price, 2)}</td>
+        <td class="${pnlColor}">${formatPercent(pnlValue, 2)}</td>
+        <td><span class="pill pill-${(t.reason || '').toLowerCase()}">${t.reason || '—'}</span></td>
+        <td>${isBTC ? (t.entry_rsi?.toFixed(1) || '—') : `${t.entry_ema_fast?.toFixed(2) || '—'}/${t.entry_ema_slow?.toFixed(2) || '—'}`}</td>
+      </tr>
+    `;
+  }
+  
   container.innerHTML = `
     <div class="section-title">ÚLTIMAS OPERACIONES</div>
     <table class="trades-table">
       <thead><tr><th>LADO</th><th>ENTRADA</th><th>PnL</th><th>RES</th><th>${isBTC ? 'RSI' : 'EMA3/10'}</th></tr></thead>
-      <tbody>
-        ${lastTrades.map(t => {
-          const pnlValue = t.pnl_pct || 0;
-          const pnlColor = pnlValue > 0 ? 'green' : (pnlValue < 0 ? 'red' : 'text');
-          return `
-          <tr>
-            <td><span class="pill pill-${t.side?.toLowerCase()}">${t.side || '—'}</span></td>
-            <td>$${formatNumber(t.entry_price, 2)}</span></td>
-            <td class="${pnlColor}">${formatPercent(pnlValue, 2)}</td>
-            <td><span class="pill pill-${(t.reason || '').toLowerCase()}">${t.reason || '—'}</span></span></td>
-            <td>${isBTC ? (t.entry_rsi?.toFixed(1) || '—') : `${t.entry_ema_fast?.toFixed(2) || '—'}/${t.entry_ema_slow?.toFixed(2) || '—'}`}</span></td>
-          </tr>
-          `;
-        }).join('')}
-      </tbody>
+      <tbody>${tableRows}</tbody>
     </table>
   `;
 }
@@ -333,19 +342,25 @@ function renderSnapshots(containerId, snapshots) {
   
   const lastSnapshots = [...snapshots].reverse().slice(0, 3);
   
-  container.innerHTML = `
-    <div class="section-title">HISTORIAL DIARIO</div>
-    ${lastSnapshots.map(s => {
-      const returnVal = s.return_total || 0;
-      const returnColor = returnVal > 0 ? 'green' : (returnVal < 0 ? 'red' : 'text');
-      return `
+  let snapshotRows = '';
+  for (const s of lastSnapshots) {
+    const returnVal = s.return_total || 0;
+    let returnColor = 'text';
+    if (returnVal > 0) returnColor = 'green';
+    else if (returnVal < 0) returnColor = 'red';
+    
+    snapshotRows += `
       <div class="snapshot-row">
         <span class="snapshot-date">${s.date || '—'}</span>
         <span class="snapshot-return ${returnColor}">${formatPercent(returnVal, 2)}</span>
         <span style="color:var(--muted2)">WR ${(s.win_rate || 0).toFixed(0)}%</span>
       </div>
-      `;
-    }).join('')}
+    `;
+  }
+  
+  container.innerHTML = `
+    <div class="section-title">HISTORIAL DIARIO</div>
+    ${snapshotRows}
   `;
 }
 
