@@ -22,51 +22,106 @@
   --cond: 'Barlow Condensed', sans-serif;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; padding: 16px; }
-.container { max-width: 1400px; margin: 0 auto; }
-.header { margin-bottom: 24px; text-align: center; }
-.header h1 { font-family: var(--cond); font-size: 28px; font-weight: 900; color: var(--green); letter-spacing: 0.05em; }
-.header p { font-size: 10px; color: var(--muted2); margin-top: 4px; }
-.dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.bot-card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 20px; overflow: hidden; }
-.bot-header { padding: 16px 20px; border-bottom: 1px solid var(--bd); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-.bot-name { font-family: var(--cond); font-size: 24px; font-weight: 900; }
+html, body { 
+  background: var(--bg); 
+  color: var(--text); 
+  font-family: var(--mono); 
+  font-size: 13px; 
+  height: 100vh;
+  overflow: hidden;
+}
+body { padding: 12px; }
+.container { 
+  max-width: 1600px; 
+  margin: 0 auto; 
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.header { margin-bottom: 16px; text-align: center; flex-shrink: 0; }
+.header h1 { font-family: var(--cond); font-size: 24px; font-weight: 900; color: var(--green); letter-spacing: 0.05em; }
+.header p { font-size: 9px; color: var(--muted2); margin-top: 4px; }
+.dashboard { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 16px; 
+  flex: 1;
+  min-height: 0;
+}
+.bot-card { 
+  background: var(--bg2); 
+  border: 1px solid var(--bd); 
+  border-radius: 16px; 
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.bot-header { 
+  padding: 12px 16px; 
+  border-bottom: 1px solid var(--bd); 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  flex-wrap: wrap; 
+  gap: 8px; 
+  flex-shrink: 0;
+}
+.bot-name { font-family: var(--cond); font-size: 20px; font-weight: 900; }
 .bot-name.btc { color: #f7931a; }
 .bot-name.sol { color: #00d4aa; }
-.status-badge { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; background: var(--bg3); border: 1px solid var(--bd); }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.status-badge { display: flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 9px; font-weight: 700; background: var(--bg3); border: 1px solid var(--bd); }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
 .status-badge.alive { border-color: var(--green); color: var(--green); background: rgba(0,230,118,0.1); }
 .status-badge.alive .status-dot { background: var(--green); animation: blink 2s infinite; }
 .status-badge.dead { border-color: var(--red); color: var(--red); background: rgba(255,61,87,0.15); }
-.metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--bd); }
-.metric { background: var(--bg3); padding: 12px; text-align: center; }
-.metric-value { font-size: 20px; font-weight: 700; font-family: var(--cond); }
-.metric-label { font-size: 8px; color: var(--muted2); letter-spacing: 0.08em; margin-top: 4px; }
-.position-section { padding: 16px 20px; border-bottom: 1px solid var(--bd); }
-.position-badge { display: inline-block; padding: 4px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; font-family: var(--cond); letter-spacing: 0.05em; background: var(--bg3); }
+.metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--bd); flex-shrink: 0; }
+.metric { background: var(--bg3); padding: 10px; text-align: center; }
+.metric-value { font-size: 18px; font-weight: 700; font-family: var(--cond); }
+.metric-label { font-size: 7px; color: var(--muted2); letter-spacing: 0.08em; margin-top: 3px; }
+.position-section { padding: 12px 16px; border-bottom: 1px solid var(--bd); flex-shrink: 0; }
+.position-badge { display: inline-block; padding: 3px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; font-family: var(--cond); letter-spacing: 0.05em; background: var(--bg3); }
 .position-badge.long { background: rgba(0,230,118,0.15); color: var(--green); }
 .position-badge.short { background: rgba(255,61,87,0.15); color: var(--red); }
 .position-badge.flat { background: var(--bg3); color: var(--muted2); }
-.position-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
-.position-detail { background: var(--bg3); border-radius: 8px; padding: 8px; text-align: center; }
-.position-detail-label { font-size: 7px; color: var(--muted2); letter-spacing: 0.08em; }
-.position-detail-value { font-size: 12px; font-weight: 700; margin-top: 2px; }
-.trades-section, .snapshots-section { padding: 16px 20px; border-bottom: 1px solid var(--bd); }
-.section-title { font-size: 9px; letter-spacing: 0.14em; color: var(--muted2); font-weight: 700; margin-bottom: 12px; text-transform: uppercase; }
-.trades-table { width: 100%; font-size: 10px; border-collapse: collapse; }
-.trades-table th { text-align: left; padding: 6px 4px; color: var(--muted2); font-weight: 700; border-bottom: 1px solid var(--bd); }
-.trades-table td { padding: 6px 4px; border-bottom: 1px solid rgba(30,37,48,0.4); }
-.pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 8px; font-weight: 700; }
+.position-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.position-detail { background: var(--bg3); border-radius: 8px; padding: 6px; text-align: center; }
+.position-detail-label { font-size: 6px; color: var(--muted2); letter-spacing: 0.08em; }
+.position-detail-value { font-size: 11px; font-weight: 700; margin-top: 2px; }
+.trades-section, .snapshots-section { padding: 10px 16px; border-bottom: 1px solid var(--bd); flex-shrink: 0; }
+.section-title { font-size: 8px; letter-spacing: 0.14em; color: var(--muted2); font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
+.trades-table { width: 100%; font-size: 9px; border-collapse: collapse; }
+.trades-table th { text-align: left; padding: 4px 3px; color: var(--muted2); font-weight: 700; border-bottom: 1px solid var(--bd); }
+.trades-table td { padding: 4px 3px; border-bottom: 1px solid rgba(30,37,48,0.4); }
+.pill { display: inline-block; padding: 1px 6px; border-radius: 10px; font-size: 7px; font-weight: 700; }
 .pill-long { background: rgba(0,230,118,0.15); color: var(--green); }
 .pill-short { background: rgba(255,61,87,0.15); color: var(--red); }
 .pill-tp { background: rgba(0,230,118,0.15); color: var(--green); }
 .pill-sl { background: rgba(255,61,87,0.15); color: var(--red); }
-.snapshot-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(30,37,48,0.4); font-size: 11px; }
+.snapshot-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(30,37,48,0.4); font-size: 9px; }
 .snapshot-date { color: var(--muted2); }
 .snapshot-return { font-weight: 700; }
-.update-time { text-align: center; margin-top: 20px; font-size: 9px; color: var(--muted2); padding: 12px; }
+.update-time { text-align: center; margin-top: 12px; font-size: 8px; color: var(--muted2); padding: 8px; flex-shrink: 0; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-@media (max-width: 900px) { .dashboard { grid-template-columns: 1fr; } body { padding: 12px; } .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* Desktop: sin scroll, todo visible */
+@media (min-width: 901px) {
+  body { padding: 10px; }
+  .header h1 { font-size: 22px; }
+  .dashboard { gap: 12px; }
+  .bot-card { overflow-y: auto; }
+  .bot-card::-webkit-scrollbar { width: 4px; }
+  .bot-card::-webkit-scrollbar-track { background: var(--bg3); }
+  .bot-card::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 4px; }
+}
+
+/* Mobile: scroll normal */
+@media (max-width: 900px) { 
+  .dashboard { grid-template-columns: 1fr; } 
+  body { padding: 12px; height: auto; overflow-y: auto; }
+  html, body { height: auto; overflow-y: auto; }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
 </head>
 <body>
@@ -142,6 +197,19 @@ function formatPercent(n, decimals = 2) {
   return `${val >= 0 ? '+' : ''}${val.toFixed(decimals)}%`;
 }
 
+// Determinar color para RETURN: verde si >0, rojo si <0, blanco si ==0
+function getReturnColor(value) {
+  if (value > 0) return 'green';
+  if (value < 0) return 'red';
+  return 'text'; // blanco
+}
+
+// Determinar color para WIN RATE: verde si >50, rojo si <=50
+function getWRColor(value) {
+  if (value > 50) return 'green';
+  return 'red';
+}
+
 function renderMetrics(containerId, state) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -159,11 +227,14 @@ function renderMetrics(containerId, state) {
   const wr = tot > 0 ? (wins / tot) * 100 : 0;
   const dd = state.max_drawdown_pct || 0;
   
+  const returnColor = getReturnColor(ret);
+  const wrColor = getWRColor(wr);
+  
   container.innerHTML = `
-    <div class="metric"><div class="metric-value ${ret >= 0 ? 'green' : 'red'}">${formatPercent(ret, 2)}</div><div class="metric-label">RETURN</div></div>
-    <div class="metric"><div class="metric-value ${wr >= 55 ? 'green' : wr >= 45 ? 'yellow' : 'red'}">${wr.toFixed(1)}%</div><div class="metric-label">WIN RATE</div></div>
-    <div class="metric"><div class="metric-value ${dd < 10 ? 'green' : dd < 20 ? 'yellow' : 'red'}">${dd.toFixed(1)}%</div><div class="metric-label">MAX DD</div></div>
-    <div class="metric"><div class="metric-value">$${(cap / 1000).toFixed(1)}k</div><div class="metric-label">CAPITAL</div></div>
+    <div class="metric"><div class="metric-value ${returnColor}">${formatPercent(ret, 2)}</div><div class="metric-label">RETURN</div></div>
+    <div class="metric"><div class="metric-value ${wrColor}">${wr.toFixed(1)}%</div><div class="metric-label">WIN RATE</div></div>
+    <div class="metric"><div class="metric-value red">${dd.toFixed(1)}%</div><div class="metric-label">MAX DD</div></div>
+    <div class="metric"><div class="metric-value text">$${(cap / 1000).toFixed(1)}k</div><div class="metric-label">CAPITAL</div></div>
   `;
 }
 
@@ -198,12 +269,14 @@ function renderPosition(containerId, state, price) {
   
   const positionClass = position ? position.toLowerCase() : 'flat';
   const positionText = position || 'FLAT';
+  const pnlColor = pnl > 0 ? 'green' : (pnl < 0 ? 'red' : 'text');
+  const pnlText = position ? `${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%` : '—';
   
   container.innerHTML = `
     <div class="position-badge ${positionClass}">${positionText}</div>
     <div class="position-details">
       <div class="position-detail"><div class="position-detail-label">ENTRADA</div><div class="position-detail-value">${entryPrice > 0 ? `$${formatNumber(entryPrice, 2)}` : '—'}</div></div>
-      <div class="position-detail"><div class="position-detail-label">PnL</div><div class="position-detail-value ${pnl >= 0 ? 'green' : 'red'}">${position ? `${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%` : '—'}</div></div>
+      <div class="position-detail"><div class="position-detail-label">PnL</div><div class="position-detail-value ${pnlColor}">${pnlText}</div></div>
       <div class="position-detail"><div class="position-detail-label">TP / SL</div><div class="position-detail-value">${tp > 0 ? `$${formatNumber(tp, 2)} / $${formatNumber(sl, 2)}` : '—'}</div></div>
     </div>
   `;
@@ -214,7 +287,7 @@ function renderTrades(containerId, trades, botType) {
   if (!container) return;
   
   if (!trades || trades.length === 0) {
-    container.innerHTML = `<div class="section-title">ÚLTIMAS OPERACIONES</div><div style="color:var(--muted2);text-align:center;padding:12px;">Sin operaciones</div>`;
+    container.innerHTML = `<div class="section-title">ÚLTIMAS OPERACIONES</div><div style="color:var(--muted2);text-align:center;padding:8px;">Sin operaciones</div>`;
     return;
   }
   
@@ -226,15 +299,19 @@ function renderTrades(containerId, trades, botType) {
     <table class="trades-table">
       <thead><tr><th>LADO</th><th>ENTRADA</th><th>PnL</th><th>RES</th><th>${isBTC ? 'RSI' : 'EMA3/10'}</th></tr></thead>
       <tbody>
-        ${lastTrades.map(t => `
+        ${lastTrades.map(t => {
+          const pnlValue = t.pnl_pct || 0;
+          const pnlColor = pnlValue > 0 ? 'green' : (pnlValue < 0 ? 'red' : 'text');
+          return `
           <tr>
             <td><span class="pill pill-${t.side?.toLowerCase()}">${t.side || '—'}</span></td>
             <td>$${formatNumber(t.entry_price, 2)}</span></td>
-            <td class="${(t.pnl_pct || 0) >= 0 ? 'green' : 'red'}">${formatPercent(t.pnl_pct, 2)}</td>
-            <td><span class="pill pill-${(t.reason || '').toLowerCase()}">${t.reason || '—'}</span></td>
-            <td>${isBTC ? (t.entry_rsi?.toFixed(1) || '—') : `${t.entry_ema_fast?.toFixed(2) || '—'}/${t.entry_ema_slow?.toFixed(2) || '—'}`}</td>
+            <td class="${pnlColor}">${formatPercent(pnlValue, 2)}</span></td>
+            <td><span class="pill pill-${(t.reason || '').toLowerCase()}">${t.reason || '—'}</span></span></td>
+            <td>${isBTC ? (t.entry_rsi?.toFixed(1) || '—') : `${t.entry_ema_fast?.toFixed(2) || '—'}/${t.entry_ema_slow?.toFixed(2) || '—'}`}</span></td>
           </tr>
-        `).join('')}
+          `;
+        }).join('')}
       </tbody>
     </table>
   `;
@@ -245,7 +322,7 @@ function renderSnapshots(containerId, snapshots) {
   if (!container) return;
   
   if (!snapshots || snapshots.length === 0) {
-    container.innerHTML = `<div class="section-title">HISTORIAL DIARIO</div><div style="color:var(--muted2);text-align:center;padding:12px;">Sin datos</div>`;
+    container.innerHTML = `<div class="section-title">HISTORIAL DIARIO</div><div style="color:var(--muted2);text-align:center;padding:8px;">Sin datos</div>`;
     return;
   }
   
@@ -253,13 +330,17 @@ function renderSnapshots(containerId, snapshots) {
   
   container.innerHTML = `
     <div class="section-title">HISTORIAL DIARIO</div>
-    ${lastSnapshots.map(s => `
+    ${lastSnapshots.map(s => {
+      const returnVal = s.return_total || 0;
+      const returnColor = returnVal > 0 ? 'green' : (returnVal < 0 ? 'red' : 'text');
+      return `
       <div class="snapshot-row">
         <span class="snapshot-date">${s.date || '—'}</span>
-        <span class="snapshot-return ${(s.return_total || 0) >= 0 ? 'green' : 'red'}">${formatPercent(s.return_total, 2)}</span>
+        <span class="snapshot-return ${returnColor}">${formatPercent(returnVal, 2)}</span>
         <span style="color:var(--muted2)">WR ${(s.win_rate || 0).toFixed(0)}%</span>
       </div>
-    `).join('')}
+      `;
+    }).join('')}
   `;
 }
 
