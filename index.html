@@ -104,6 +104,11 @@ body { padding: 12px; }
 .update-time { text-align: center; margin-top: 12px; font-size: 8px; color: var(--muted2); padding: 8px; flex-shrink: 0; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
+/* CLASES DE COLORES */
+.green { color: var(--green); }
+.red { color: var(--red); }
+.text { color: var(--text); }
+
 /* Desktop: sin scroll, todo visible */
 @media (min-width: 901px) {
   body { padding: 10px; }
@@ -201,7 +206,7 @@ function formatPercent(n, decimals = 2) {
 function getReturnColor(value) {
   if (value > 0) return 'green';
   if (value < 0) return 'red';
-  return 'text'; // blanco
+  return 'text';
 }
 
 // Determinar color para WIN RATE: verde si >50, rojo si <=50
@@ -306,7 +311,7 @@ function renderTrades(containerId, trades, botType) {
           <tr>
             <td><span class="pill pill-${t.side?.toLowerCase()}">${t.side || '—'}</span></td>
             <td>$${formatNumber(t.entry_price, 2)}</span></td>
-            <td class="${pnlColor}">${formatPercent(pnlValue, 2)}</span></td>
+            <td class="${pnlColor}">${formatPercent(pnlValue, 2)}</td>
             <td><span class="pill pill-${(t.reason || '').toLowerCase()}">${t.reason || '—'}</span></span></td>
             <td>${isBTC ? (t.entry_rsi?.toFixed(1) || '—') : `${t.entry_ema_fast?.toFixed(2) || '—'}/${t.entry_ema_slow?.toFixed(2) || '—'}`}</span></td>
           </tr>
