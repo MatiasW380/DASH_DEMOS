@@ -138,6 +138,7 @@ function renderMetrics(containerId, state) {
   if (!container) return;
   
   const cap = state.capital || 0;
+  // Fallback: initial_capital no existe en SOL, usar 1000 (capital inicial de ambos bots)
   const initialCap = state.initial_capital || 1000;
   const ret = ((cap - initialCap) / initialCap) * 100;
   const wins = state.total_wins || 0;
@@ -160,8 +161,10 @@ function renderPosition(containerId, state, price) {
   
   const position = state.position;
   const entryPrice = state.entry_price || 0;
-  const tpPct = state.symbol?.includes('BTC') ? 4.0 : 5.0;
-  const slPct = state.symbol?.includes('BTC') ? 1.2 : 1.5;
+  // Detectar si es BTC o SOL por el símbolo o por el precio (BTC > 10000, SOL < 1000)
+  const isBTC = price > 10000;
+  const tpPct = isBTC ? 4.0 : 5.0;
+  const slPct = isBTC ? 1.2 : 1.5;
   const lev = 10;
   
   let tp = 0, sl = 0, pnl = 0;
@@ -205,8 +208,7 @@ function renderTrades(containerId, trades, botType) {
   container.innerHTML = `
     <div class="section-title">ÚLTIMAS OPERACIONES</div>
     <table class="trades-table">
-      <thead><tr><th>LADO</th><th>ENTRADA</th><th>PnL</th><th>RES</th><th>${isBTC ? 'RSI' : 'EMA3/10'}</th></tr>
-      </thead>
+      <thead><tr><th>LADO</th><th>ENTRADA</th><th>PnL</th><th>RES</th><th>${isBTC ? 'RSI' : 'EMA3/10'}</th></tr></thead>
       <tbody>
         ${lastTrades.map(t => `
           <tr>
@@ -258,32 +260,36 @@ function updateStatus(botId, alive) {
 }
 
 async function updateAll() {
-  const [btcData, solData] = await Promise.all([
-    fetchBotData('/api', 'BTC'),
-    fetchBotData('/api/sol', 'SOL')
-  ]);
-  
-  // Determinar si los bots están vivos por timestamp de state.json
-  // Por ahora, si tienen capital > 0 y no hay error, asumimos vivos
-  const btcAlive = !btcData.state.error && (btcData.state.capital > 0);
-  const solAlive = !solData.state.error && (solData.state.capital > 0);
-  
-  updateStatus('btc', btcAlive);
-  updateStatus('sol', solAlive);
-  
-  // Render BTC
-  renderMetrics('btc-metrics', btcData.state);
-  renderPosition('btc-position', btcData.state, btcData.state.last_price || 0);
-  renderTrades('btc-trades', btcData.trades, 'btc');
-  renderSnapshots('btc-snapshots', btcData.snapshots);
-  
-  // Render SOL
-  renderMetrics('sol-metrics', solData.state);
-  renderPosition('sol-position', solData.state, solData.state.last_price || 0);
-  renderTrades('sol-trades', solData.trades, 'sol');
-  renderSnapshots('sol-snapshots', solData.snapshots);
-  
-  document.getElementById('update-time').textContent = `Última actualización: ${new Date().toLocaleTimeString('es-AR')}`;
+  try {
+    const [btcData, solData] = await Promise.all([
+      fetchBotData('/api', 'BTC'),
+      fetchBotData('/api/sol', 'SOL')
+    ]);
+    
+    // Determinar si los bots están vivos (si tienen capital y no hay error)
+    const btcAlive = !btcData.state.error && (btcData.state.capital > 0);
+    const solAlive = !solData.state.error && (solData.state.capital > 0);
+    
+    updateStatus('btc', btcAlive);
+    updateStatus('sol', solAlive);
+    
+    // Render BTC
+    renderMetrics('btc-metrics', btcData.state);
+    renderPosition('btc-position', btcData.state, btcData.state.last_price || 0);
+    renderTrades('btc-trades', btcData.trades, 'btc');
+    renderSnapshots('btc-snapshots', btcData.snapshots);
+    
+    // Render SOL
+    renderMetrics('sol-metrics', solData.state);
+    renderPosition('sol-position', solData.state, solData.state.last_price || 0);
+    renderTrades('sol-trades', solData.trades, 'sol');
+    renderSnapshots('sol-snapshots', solData.snapshots);
+    
+    document.getElementById('update-time').textContent = `Última actualización: ${new Date().toLocaleTimeString('es-AR')}`;
+  } catch (error) {
+    console.error('Error en updateAll:', error);
+    document.getElementById('update-time').textContent = `Error actualizando: ${error.message}`;
+  }
 }
 
 // Inicializar
