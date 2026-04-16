@@ -107,22 +107,26 @@ const INITIAL_CAPITAL = 1000;
 
 async function fetchBotData(endpoint, botId) {
   try {
-    console.log(`[${botId}] Fetching ${API_BASE}${endpoint}/state`);
     const [stateRes, tradesRes, snapshotsRes] = await Promise.all([
       fetch(`${API_BASE}${endpoint}/state`),
       fetch(`${API_BASE}${endpoint}/trades`),
       fetch(`${API_BASE}${endpoint}/snapshots`)
     ]);
     const state = await stateRes.json();
-    const trades = await tradesRes.json();
-    const snapshots = await snapshotsRes.json();
-    console.log(`[${botId}] State recibido:`, state);
-    console.log(`[${botId}] Trades count:`, trades.length);
-    console.log(`[${botId}] Snapshots count:`, snapshots.length);
+    let trades = await tradesRes.json();
+    let snapshots = await snapshotsRes.json();
+    
+    if (!Array.isArray(trades)) {
+      trades = [];
+    }
+    if (!Array.isArray(snapshots)) {
+      snapshots = [];
+    }
+    
     return { state, trades, snapshots };
   } catch (e) {
-    console.error(`[${botId}] Error:`, e);
-    return { state: { error: true, message: e.message }, trades: [], snapshots: [] };
+    console.error(`${botId} error:`, e);
+    return { state: { error: true }, trades: [], snapshots: [] };
   }
 }
 
@@ -138,16 +142,12 @@ function formatPercent(n, decimals = 2) {
   return `${val >= 0 ? '+' : ''}${val.toFixed(decimals)}%`;
 }
 
-function renderMetrics(containerId, state, botName) {
+function renderMetrics(containerId, state) {
   const container = document.getElementById(containerId);
-  if (!container) {
-    console.error(`[${botName}] Container ${containerId} no encontrado`);
-    return;
-  }
+  if (!container) return;
   
   if (state.error) {
-    console.error(`[${botName}] State con error:`, state.error);
-    container.innerHTML = `<div class="metric"><div class="metric-value">ERROR</div><div class="metric-label">${state.message || 'NO DATA'}</div></div>`.repeat(4);
+    container.innerHTML = `<div class="metric"><div class="metric-value">ERROR</div><div class="metric-label">NO DATA</div></div>`.repeat(4);
     return;
   }
   
@@ -159,8 +159,6 @@ function renderMetrics(containerId, state, botName) {
   const wr = tot > 0 ? (wins / tot) * 100 : 0;
   const dd = state.max_drawdown_pct || 0;
   
-  console.log(`[${botName}] Capital: ${cap}, Return: ${ret}%, WR: ${wr}%, DD: ${dd}%`);
-  
   container.innerHTML = `
     <div class="metric"><div class="metric-value ${ret >= 0 ? 'green' : 'red'}">${formatPercent(ret, 2)}</div><div class="metric-label">RETURN</div></div>
     <div class="metric"><div class="metric-value ${wr >= 55 ? 'green' : wr >= 45 ? 'yellow' : 'red'}">${wr.toFixed(1)}%</div><div class="metric-label">WIN RATE</div></div>
@@ -169,7 +167,7 @@ function renderMetrics(containerId, state, botName) {
   `;
 }
 
-function renderPosition(containerId, state, price, botName) {
+function renderPosition(containerId, state, price) {
   const container = document.getElementById(containerId);
   if (!container) return;
   
@@ -180,7 +178,7 @@ function renderPosition(containerId, state, price, botName) {
   
   const position = state.position;
   const entryPrice = state.entry_price || 0;
-  const isBTC = botName === 'BTC';
+  const isBTC = price > 10000;
   const tpPct = isBTC ? 4.0 : 5.0;
   const slPct = isBTC ? 1.2 : 1.5;
   const lev = 10;
@@ -211,7 +209,7 @@ function renderPosition(containerId, state, price, botName) {
   `;
 }
 
-function renderTrades(containerId, trades, botType, botName) {
+function renderTrades(containerId, trades, botType) {
   const container = document.getElementById(containerId);
   if (!container) return;
   
@@ -231,7 +229,7 @@ function renderTrades(containerId, trades, botType, botName) {
         ${lastTrades.map(t => `
           <tr>
             <td><span class="pill pill-${t.side?.toLowerCase()}">${t.side || '—'}</span></td>
-            <td>$${formatNumber(t.entry_price, 2)}</td>
+            <td>$${formatNumber(t.entry_price, 2)}</span></td>
             <td class="${(t.pnl_pct || 0) >= 0 ? 'green' : 'red'}">${formatPercent(t.pnl_pct, 2)}</td>
             <td><span class="pill pill-${(t.reason || '').toLowerCase()}">${t.reason || '—'}</span></td>
             <td>${isBTC ? (t.entry_rsi?.toFixed(1) || '—') : `${t.entry_ema_fast?.toFixed(2) || '—'}/${t.entry_ema_slow?.toFixed(2) || '—'}`}</td>
@@ -242,7 +240,7 @@ function renderTrades(containerId, trades, botType, botName) {
   `;
 }
 
-function renderSnapshots(containerId, snapshots, botName) {
+function renderSnapshots(containerId, snapshots) {
   const container = document.getElementById(containerId);
   if (!container) return;
   
@@ -279,44 +277,34 @@ function updateStatus(botId, alive) {
 
 async function updateAll() {
   try {
-    console.log('=== ACTUALIZANDO DASHBOARD ===');
     const [btcData, solData] = await Promise.all([
       fetchBotData('/api', 'BTC'),
       fetchBotData('/api/sol', 'SOL')
     ]);
     
-    console.log('BTC Data recibido:', btcData.state);
-    console.log('SOL Data recibido:', solData.state);
-    
     const btcAlive = !btcData.state.error && (btcData.state.capital > 0);
     const solAlive = !solData.state.error && (solData.state.capital > 0);
-    
-    console.log(`BTC Alive: ${btcAlive}, SOL Alive: ${solAlive}`);
     
     updateStatus('btc', btcAlive);
     updateStatus('sol', solAlive);
     
-    // Render BTC
-    renderMetrics('btc-metrics', btcData.state, 'BTC');
-    renderPosition('btc-position', btcData.state, btcData.state.last_price || 0, 'BTC');
-    renderTrades('btc-trades', btcData.trades, 'btc', 'BTC');
-    renderSnapshots('btc-snapshots', btcData.snapshots, 'BTC');
+    renderMetrics('btc-metrics', btcData.state);
+    renderPosition('btc-position', btcData.state, btcData.state.last_price || 0);
+    renderTrades('btc-trades', btcData.trades, 'btc');
+    renderSnapshots('btc-snapshots', btcData.snapshots);
     
-    // Render SOL
-    renderMetrics('sol-metrics', solData.state, 'SOL');
-    renderPosition('sol-position', solData.state, solData.state.last_price || 0, 'SOL');
-    renderTrades('sol-trades', solData.trades, 'sol', 'SOL');
-    renderSnapshots('sol-snapshots', solData.snapshots, 'SOL');
+    renderMetrics('sol-metrics', solData.state);
+    renderPosition('sol-position', solData.state, solData.state.last_price || 0);
+    renderTrades('sol-trades', solData.trades, 'sol');
+    renderSnapshots('sol-snapshots', solData.snapshots);
     
     document.getElementById('update-time').textContent = `Última actualización: ${new Date().toLocaleTimeString('es-AR')}`;
-    console.log('=== ACTUALIZACIÓN COMPLETADA ===');
   } catch (error) {
-    console.error('Error en updateAll:', error);
-    document.getElementById('update-time').textContent = `Error actualizando: ${error.message}`;
+    console.error('Error:', error);
+    document.getElementById('update-time').textContent = `Error: ${error.message}`;
   }
 }
 
-// Inicializar
 updateAll();
 setInterval(updateAll, REFRESH);
 </script>
